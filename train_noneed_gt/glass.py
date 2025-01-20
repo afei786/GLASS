@@ -338,17 +338,17 @@ class GLASS(torch.nn.Module):
                 self.load_state_dict(state_dict, strict=False)
 
             # 获取预测结果
-            images, scores, segmentations, labels_gt, masks_gt = self.predict(test_data)
+            images, scores, segmentations, labels_gt, masks_gt, img_paths = self.predict(test_data)
 
             # 只保存结果图像，不返回指标
-            self._evaluate(images, scores, segmentations, labels_gt, masks_gt, name, path='eval')
+            self._evaluate(images, scores, segmentations, labels_gt, masks_gt, name, img_paths, path='eval')
         else:
             LOGGER.info("No ckpt file found!")
 
         # 不返回任何指标
         return
 
-    def _evaluate(self, images, scores, segmentations, labels_gt, masks_gt, name, path='eval'):
+    def _evaluate(self, images, scores, segmentations, labels_gt, masks_gt, name, img_paths, path='eval'):
         # 规范化分数（去掉 image_auroc 等计算）
         scores = np.squeeze(np.array(scores))
         img_min_scores = min(scores)
@@ -374,12 +374,17 @@ class GLASS(torch.nn.Module):
             mask = (mask * 255).astype('uint8')
             mask = cv2.applyColorMap(mask, cv2.COLORMAP_JET)
 
-            img_up = np.hstack([defect, target, mask])
-            img_up = cv2.resize(img_up, (256 * 3, 256))
+            # img_up = np.hstack([defect, target, mask])
+            img_up = np.hstack([defect, mask])
+
+            img_up = cv2.resize(img_up, (640 * 2, 640))
             full_path = os.path.join('./results/', path, name)
             utils.del_remake_dir(full_path, del_flag=False)
-            cv2.imwrite(os.path.join(full_path, f"{str(i + 1).zfill(3)}.png"), img_up)
 
+            img_name = os.path.basename(img_paths[i])
+
+            cv2.imwrite(os.path.join(full_path, img_name), img_up)
+            cv2.imwrite(os.path.join(full_path, f'mask_{img_name}'), mask)
         return  # 不返回任何指标
 
     def predict(self, test_dataloader):
@@ -394,6 +399,7 @@ class GLASS(torch.nn.Module):
         masks_gt = []
         t1 = time.time()
         # with tqdm.tqdm(test_dataloader, desc="Inferring...", leave=True, unit='batch') as data_iterator:
+
         for data in test_dataloader:
             if isinstance(data, dict):
                 labels_gt.extend(data["is_anomaly"].numpy().tolist())
@@ -410,7 +416,7 @@ class GLASS(torch.nn.Module):
         t2 = time.time()
         total_time = t2 - t1 
         print(f"Total inference time: {total_time:.2f} seconds")
-        return images, scores, masks, labels_gt, masks_gt
+        return images, scores, masks, labels_gt, masks_gt, img_paths
 
     def _predict(self, img):
         """Infer score and mask for a batch of images."""

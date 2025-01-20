@@ -45,7 +45,7 @@ class MVTecDataset(torch.utils.data.Dataset):
     def __init__(
             self,
             source,
-            anomaly_source_path='/root/dataset/dtd/images',
+            anomaly_source_path='/home/fei/code/glass/dtd/images',
             dataset_name='mvtec',
             classname='leather',
             resize=288,
@@ -217,16 +217,18 @@ class MVTecDataset(torch.utils.data.Dataset):
 
         # classpath = os.path.join(self.source, self.classname, self.split.value)
         classpath = os.path.join(self.source, self.classname) # , #self.split.value)
-        maskpath = os.path.join(self.source, self.classname, "ground_truth")
+        # maskpath = os.path.join(self.source, self.classname, "ground_truth")
         anomaly_types = os.listdir(classpath)
 
         imgpaths_per_class[self.classname] = {}
         maskpaths_per_class[self.classname] = None  # 将maskpaths_per_class设置为None
 
-        for anomaly in anomaly_types:
-            anomaly_path = os.path.join(classpath, anomaly)
-            anomaly_files = sorted(os.listdir(anomaly_path))
-            imgpaths_per_class[self.classname][anomaly] = [os.path.join(anomaly_path, x) for x in anomaly_files]
+        # for anomaly in anomaly_types:
+        #     anomaly_path = os.path.join(classpath, anomaly)
+        #     anomaly_files = sorted(os.listdir(anomaly_path))
+        #     imgpaths_per_class[self.classname][anomaly] = [os.path.join(anomaly_path, x) for x in anomaly_files]
+
+        imgpaths_per_class[self.classname]['anomaly'] = [os.path.join(classpath, x) for x in anomaly_types]
 
         # 定义data_to_iterate列表时，mask_path值为None
         data_to_iterate = []

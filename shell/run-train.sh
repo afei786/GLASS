@@ -1,6 +1,6 @@
 datapath=/home/fei/data/new_images_seg
 augpath=/home/fei/code/glass/dtd/images
-classes=('cxjzq1')
+classes=('cxjzq12')
 flags=($(for class in "${classes[@]}"; do echo '-d '"${class}"; done))
 
 cd ..
@@ -15,7 +15,7 @@ python main_noneed_gt.py \
     --pretrain_embed_dimension 1536 \
     --target_embed_dimension 1536 \
     --patchsize 3 \
-    --meta_epochs 100\
+    --meta_epochs 200\
     --eval_epochs 1 \
     --dsc_layers 2 \
     --dsc_hidden 1024 \

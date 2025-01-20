@@ -1,6 +1,6 @@
 datapath=/home/fei/data/new_images_seg
 augpath=/home/fei/code/glass/dtd/images
-classes=('cxjzq11')
+classes=('cxjzq13')
 flags=($(for class in "${classes[@]}"; do echo '-d '"${class}"; done))
 
 cd ..
@@ -32,6 +32,6 @@ python main_noneed_gt.py \
     --std 0.1 \
     --fg 0 \
     --rand_aug 1 \
-    --batch_size 8 \
-    --resize 288 \
-    --imagesize 288 "${flags[@]}" mvtec $datapath $augpath
+    --batch_size 1 \
+    --resize 640 \
+    --imagesize 640 "${flags[@]}" mvtec $datapath $augpath

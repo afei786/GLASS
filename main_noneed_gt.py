@@ -10,6 +10,10 @@ import backbones
 from train_noneed_gt import glass
 import utils
 
+warnings.filterwarnings('ignore')
+logging.basicConfig(level=logging.INFO)
+LOGGER = logging.getLogger(__name__)
+LOGGER.info("Command line arguments: {}".format(" ".join(sys.argv)))
 
 @click.group(chain=True)
 @click.option("--results_path", type=str, default="results")
@@ -193,7 +197,7 @@ def dataset(
 
                 test_dataloader.name = get_name + "_" + subdataset
 
-            if test == 'ckpt':
+            if test == 'train':
                 # 仅加载训练数据集
                 train_dataset = dataset_library.__dict__[dataset_info[1]](
                     data_path,
@@ -303,7 +307,7 @@ def run(
             GLASS.set_model_dir(os.path.join(models_dir, f"backbone_{i}"), dataset_name)
             
             # 训练过程
-            if test == 'ckpt':
+            if test == 'train':
                 for i, GLASS in enumerate(glass_list):
                     if GLASS.backbone.seed is not None:
                         utils.fix_seeds(GLASS.backbone.seed, device)
@@ -327,6 +331,14 @@ def run(
         xlsx_path = './datasets/excel/' + dataset_name.split('_')[0] + '_distribution.xlsx'
         df.to_excel(xlsx_path, index=False)
 
+def main_entry(args=None):
+    """
+    This function serves as an entry point for external calls.
+    :param args: List of arguments as you would pass via the command line.
+    """
+    if args is not None:
+        sys.argv = [sys.argv[0]] + args
+    main()
 
 if __name__ == "__main__":
     warnings.filterwarnings('ignore')

@@ -14,7 +14,7 @@ class GLASS_onnx(torch.nn.Module):
         self.glass = GLASS('cuda')
         self.glass.load(self.backbone, ["layer2", "layer3"],
                         'cuda', (3, 288, 288), 1536, 1536)
-        state_dict = torch.load('../results/models/backbone_0/mvtec_cxjzq1/ckpt1_640.pth', map_location='cuda')
+        state_dict = torch.load('./results/models/backbone_0/mvtec_cxjzq1/ckpt1_640.pth', map_location='cuda')
         self.glass.pre_projection.load_state_dict(state_dict["pre_projection"])
         self.glass.discriminator.load_state_dict(state_dict["discriminator"])
 
@@ -31,24 +31,24 @@ class GLASS_onnx(torch.nn.Module):
 
 
 if __name__ == '__main__':
-    x = torch.randn(1, 3, 640, 640, device="cuda")
+    x = torch.randn(8, 3, 288, 288, device="cuda")
 
     torch.onnx.export(
         GLASS_onnx(),
         x,
-        "../results/models/backbone_0/mvtec_cxjzq1/glass.onnx",
+        "./results/models/backbone_0/mvtec_cxjzq1/glass.onnx",
         verbose=True,
         input_names=["input"],
         output_names=["output"]
     )
 
     # load your predefined ONNX model
-    model = onnx.load("../results/models/backbone_0/mvtec_cxjzq1//glass.onnx")
+    model = onnx.load("./results/models/backbone_0/mvtec_cxjzq1//glass.onnx")
 
     # convert model
     model_simp, check = simplify(model)
     assert check, "Simplified ONNX model could not be validated"
 
     # use model_simp as a standard ONNX model object
-    onnx.save(model_simp, "../results/models/backbone_0/mvtec_cxjzq1/glass_simplified.onnx")
+    onnx.save(model_simp, "./results/models/backbone_0/mvtec_cxjzq1/glass_simplified.onnx")
     print('finished exporting onnx')
