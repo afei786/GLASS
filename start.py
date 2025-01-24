@@ -5,7 +5,8 @@ if __name__ == "__main__":
     args = [
         "--gpu", "0",
         "--seed", "0",
-        "--test", "train",
+        "--test", "test",
+        "--ckpt_path", "results/models/backbone_0/mvtec_qylgx/ckpt.pth",
         "net",
         "-b", "wideresnet50",
         "-le", "layer2",
@@ -30,11 +31,11 @@ if __name__ == "__main__":
         "--std", "0.1",
         "--fg", "0",
         "--rand_aug", "1",
-        "--batch_size", "8",
+        "--batch_size", "1",
         "--resize", "640",
         "--imagesize", "640",
-        "-d", "cxjzq13",
-        "mvtec", "/home/fei/data/new_images_seg", "/home/fei/code/glass/dtd/images"
+        "-d", "qylgx3",
+        "mvtec", "/home/fei/data/new_images_seg/qylgx_train_val/images", "/home/fei/code/glass/dtd/images"
     ]
 
     # 调用 main_noneed_gt 的主函数

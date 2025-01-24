@@ -7,7 +7,7 @@ import click
 import torch
 import warnings
 import backbones
-from train_noneed_gt import glass
+from train_noneed_gt.glass2 import GLASS
 import utils
 
 warnings.filterwarnings('ignore')
@@ -22,7 +22,8 @@ LOGGER.info("Command line arguments: {}".format(" ".join(sys.argv)))
 @click.option("--log_group", type=str, default="group")
 @click.option("--log_project", type=str, default="project")
 @click.option("--run_name", type=str, default="test")
-@click.option("--test", type=str, default="ckpt")
+@click.option("--test", type=str, default="test")
+@click.option("--ckpt_path", type=str)
 def main(**kwargs):
     pass
 
@@ -87,7 +88,7 @@ def net(
             backbone = backbones.load(backbone_name)
             backbone.name, backbone.seed = backbone_name, backbone_seed
 
-            glass_inst = glass.GLASS(device)
+            glass_inst = GLASS(device)
             glass_inst.load(
                 backbone=backbone,
                 layers_to_extract_from=layers_to_extract_from,
@@ -269,6 +270,7 @@ def run(
         log_project,
         run_name,
         test,
+        ckpt_path
 ):
     methods = {key: item for (key, item) in methods}
 
@@ -322,7 +324,7 @@ def run(
             elif test == 'test':
                 # 测试过程（不接收指标返回值）
                 if not isinstance(flag, int):
-                    GLASS.tester(dataloaders["testing"], dataset_name)  # 不需要返回指标
+                    GLASS.tester(ckpt_path, dataloaders["testing"], dataset_name)  # 不需要返回指标
 
 
     # 保存分布信息到Excel

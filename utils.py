@@ -153,6 +153,14 @@ def torch_format_2_numpy_img(img):
         img = img * np.array(IMAGENET_STD) + np.array(IMAGENET_MEAN)
         img = img[:, :, [2, 1, 0]]
         img = (img * 255).astype('uint8')
+    elif len(img.shape) == 4:
+        # [B, C, H, W]
+        # 减少B
+        img = img.squeeze(0)
+        img = img.transpose([1, 2, 0])
+        img = img * np.array(IMAGENET_STD) + np.array(IMAGENET_MEAN)
+        img = img[:, :, [2, 1, 0]]
+        img = (img * 255).astype('uint8')
     else:
         img = img.transpose([1, 2, 0])
         img = np.repeat(img, 3, axis=-1)

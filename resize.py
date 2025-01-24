@@ -42,8 +42,8 @@ def resize_with_padding(image, target_size):
 
 
 if __name__ == '__main__':
-    img_path = '/home/fei/data/new_images_seg/cxjzq11/test'
-    new_path = '/home/fei/data/new_images_seg/cxjzq13/test'
+    img_path = '/home/fei/data/new_images_seg/qylgx'
+    new_path = '/home/fei/data/new_images_seg/qylgx_train_val/images/qylgx3'
     os.makedirs(new_path, exist_ok=True)
     img_list = os.listdir(img_path)
     for img_name in tqdm(img_list):
