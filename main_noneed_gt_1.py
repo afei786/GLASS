@@ -17,13 +17,13 @@ LOGGER.info("Command line arguments: {}".format(" ".join(sys.argv)))
 
 @click.group(chain=True)
 @click.option("--results_path", type=str, default="results")
-@click.option("--gpu", type=int, default=[], multiple=True, show_default=True)
+@click.option("--gpu", type=int, default=["0"], multiple=True, show_default=True)
 @click.option("--seed", type=int, default=0, show_default=True)
 @click.option("--log_group", type=str, default="group")
 @click.option("--log_project", type=str, default="project")
 @click.option("--run_name", type=str, default="test")
-@click.option("--test", type=str, default="test")
-@click.option("--ckpt_path", type=str)
+@click.option("--test", type=str, default="test")  # 测试或训练
+@click.option("--ckpt_path", type=str)  # 如果测试，则指定ckpt_path
 def main(**kwargs):
     pass
 
@@ -31,12 +31,12 @@ def main(**kwargs):
 @main.command("net")
 @click.option("--dsc_margin", type=float, default=0.5)
 @click.option("--train_backbone", is_flag=True)
-@click.option("--backbone_names", "-b", type=str, multiple=True, default=[])
-@click.option("--layers_to_extract_from", "-le", type=str, multiple=True, default=[])
-@click.option("--pretrain_embed_dimension", type=int, default=1024)
-@click.option("--target_embed_dimension", type=int, default=1024)
+@click.option("--backbone_names", "-b", type=str, multiple=True, default=["wideresnet50"])
+@click.option("--layers_to_extract_from", "-le", type=str, multiple=True, default=["layer2","layer3"])
+@click.option("--pretrain_embed_dimension", type=int, default=1536)
+@click.option("--target_embed_dimension", type=int, default=1536)
 @click.option("--patchsize", type=int, default=3)
-@click.option("--meta_epochs", type=int, default=640)
+@click.option("--meta_epochs", type=int, default=640)  # 最大训练轮次
 @click.option("--eval_epochs", type=int, default=1)
 @click.option("--dsc_layers", type=int, default=2)
 @click.option("--dsc_hidden", type=int, default=1024)
@@ -72,6 +72,8 @@ def net(
         limit,
 ):
     backbone_names = list(backbone_names)
+    print('backbone_names',backbone_names)
+    print('layers_to_extract_from',layers_to_extract_from)
     if len(backbone_names) > 1:
         layers_to_extract_from_coll = []
         for idx in range(len(backbone_names)):
@@ -120,11 +122,11 @@ def net(
 
 
 @main.command("dataset")
-@click.argument("name", type=str)
-@click.argument("data_path", type=click.Path(exists=True, file_okay=False))
-@click.argument("aug_path", type=click.Path(exists=True, file_okay=False))
-@click.option("--subdatasets", "-d", multiple=True, type=str, required=True)
-@click.option("--batch_size", default=8, type=int, show_default=True)
+@click.argument("data_path", type=click.Path(exists=True, file_okay=False))  # 数据集根目录
+@click.argument("name", type=str, default="mvtec")  # 数据集类型名称
+@click.argument("aug_path",  default="/home/fei/code/glass/dtd/images", type=click.Path(exists=True, file_okay=False))  # 增强数据集路径
+@click.option("--subdatasets", "-d", multiple=True, type=str, required=True)  # 数据集子集名 / 类别名
+@click.option("--batch_size", default=8, type=int, show_default=True)  # 训练/测试时 batch_size
 @click.option("--num_workers", default=1, type=int, show_default=True)
 @click.option("--resize", default=288, type=int, show_default=True)
 @click.option("--imagesize", default=288, type=int, show_default=True)
@@ -140,7 +142,7 @@ def net(
 @click.option("--distribution", default=0, type=int)
 @click.option("--mean", default=0.5, type=float)
 @click.option("--std", default=0.1, type=float)
-@click.option("--fg", default=1, type=int)
+@click.option("--fg", default=0, type=int)
 @click.option("--rand_aug", default=1, type=int)
 @click.option("--augment", is_flag=True)
 def dataset(
@@ -168,6 +170,8 @@ def dataset(
         rand_aug,
         augment,
 ):
+    print('name',name)
+    print('data_path',data_path)
     _DATASETS = {"mvtec": ["train_noneed_gt.mvtec", "MVTecDataset"], "visa": ["train_noneed_gt.visa", "VisADataset"],
                  "mpdd": ["train_noneed_gt.mvtec", "MVTecDataset"], "wfdd": ["train_noneed_gt.mvtec", "MVTecDataset"], }
     dataset_info = _DATASETS[name]

@@ -351,9 +351,10 @@ class GLASS(torch.nn.Module):
     def _evaluate(self, images, scores, segmentations, labels_gt, masks_gt, name, img_paths, path='eval'):
         # 规范化分数（去掉 image_auroc 等计算）
         scores = np.squeeze(np.array(scores))
-        img_min_scores = min(scores)
-        img_max_scores = max(scores)
-        norm_scores = (scores - img_min_scores) / (img_max_scores - img_min_scores + 1e-10)
+        # print('scores', scores)
+        # img_min_scores = min(scores)
+        # img_max_scores = max(scores)
+        # norm_scores = (scores - img_min_scores) / (img_max_scores - img_min_scores + 1e-10)
 
         if len(masks_gt) > 0:
             # 规范化分割分数
@@ -379,13 +380,13 @@ class GLASS(torch.nn.Module):
 
             img_up = cv2.resize(img_up, (640 * 2, 640))
             full_path = os.path.join('./results/', path, name)
-            print(full_path)
+            # print(full_path)
             utils.del_remake_dir(full_path, del_flag=False)
 
             img_name = os.path.basename(img_paths[i])
 
             cv2.imwrite(os.path.join(full_path, img_name), img_up)
-            cv2.imwrite(os.path.join(full_path, f'mask_{img_name}'), mask)
+            # cv2.imwrite(os.path.join(full_path, f'mask_{img_name}'), mask)
         return  # 不返回任何指标
 
     def predict(self, test_dataloader):

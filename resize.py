@@ -42,8 +42,8 @@ def resize_with_padding(image, target_size):
 
 
 if __name__ == '__main__':
-    img_path = '/home/fei/data/new_images_seg/qylgx'
-    new_path = '/home/fei/data/new_images_seg/qylgx_train_val/images/qylgx3'
+    img_path = '/home/fei/code/jm_wh3/images_seg_dxllt_new/dxllt1'
+    new_path = '/home/fei/code/jm_wh3/images_seg_dxllt_new/dxllt1_new'
     os.makedirs(new_path, exist_ok=True)
     img_list = os.listdir(img_path)
     for img_name in tqdm(img_list):
@@ -52,7 +52,7 @@ if __name__ == '__main__':
         # img = resize(img, (640, 640))
         # cv2.imwrite(os.path.join(new_path, img_name), img)
     
-        target_size = (640, 640)  # 目标尺寸
+        target_size = (256, 256)  # 目标尺寸
         result = resize_with_padding(img, target_size)
 
         cv2.imwrite(os.path.join(new_path, img_name), result)    

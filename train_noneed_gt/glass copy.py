@@ -330,25 +330,29 @@ class GLASS(torch.nn.Module):
         if os.path.exists(ckpt_path):
             # 加载模型检查点
             state_dict = torch.load(ckpt_path, map_location=self.device)
+
             if 'discriminator' in state_dict:
+                print('1')
                 self.discriminator.load_state_dict(state_dict['discriminator'])
                 if "pre_projection" in state_dict:
+                    print('2')
                     self.pre_projection.load_state_dict(state_dict["pre_projection"])
             else:
                 self.load_state_dict(state_dict, strict=False)
+                print('3')
 
             # 获取预测结果
-            # images, scores, segmentations, labels_gt, masks_gt, img_paths = self.predict(test_data)
-            self.predict(test_data, name)
+            images, scores, segmentations, labels_gt, masks_gt, img_paths = self.predict(test_data)
+
             # 只保存结果图像，不返回指标
-            # self._evaluate(images, scores, segmentations, labels_gt, masks_gt, name, img_paths, path='eval')
+            self._evaluate(images, scores, segmentations, labels_gt, masks_gt, name, img_paths, path='eval')
         else:
             LOGGER.info("No ckpt file found!")
 
         # 不返回任何指标
         return
 
-    def _evaluate_(self, images, scores, segmentations, masks_gt, name, img_paths, path='eval'):
+    def _evaluate(self, images, scores, segmentations, labels_gt, masks_gt, name, img_paths, path='eval'):
         # 规范化分数（去掉 image_auroc 等计算）
         scores = np.squeeze(np.array(scores))
         img_min_scores = min(scores)
@@ -364,7 +368,7 @@ class GLASS(torch.nn.Module):
 
         # 保存预测图像
         defects = np.array(images)
-        # targets = np.array(masks_gt)
+        targets = np.array(masks_gt)
         for i in range(len(defects)):
             defect = utils.torch_format_2_numpy_img(defects[i])
             # target = utils.torch_format_2_numpy_img(targets[i])
@@ -379,88 +383,45 @@ class GLASS(torch.nn.Module):
 
             img_up = cv2.resize(img_up, (640 * 2, 640))
             full_path = os.path.join('./results/', path, name)
+            # print(full_path)
             utils.del_remake_dir(full_path, del_flag=False)
 
             img_name = os.path.basename(img_paths[i])
 
             cv2.imwrite(os.path.join(full_path, img_name), img_up)
-            cv2.imwrite(os.path.join(full_path, f'mask_{img_name}'), mask)
+            # cv2.imwrite(os.path.join(full_path, f'mask_{img_name}'), mask)
         return  # 不返回任何指标
 
-    def _evaluate(self, image, segmentation, masks_gt, name, img_path, path='eval'):
-        # 规范化分数（去掉 image_auroc 等计算）
-        # scores = np.squeeze(np.array(scores))
-        # img_min_scores = min(scores)
-        # img_max_scores = max(scores)
-        # norm_scores = (scores - img_min_scores) / (img_max_scores - img_min_scores + 1e-10)
-
-        if len(masks_gt) > 0:
-            # 规范化分割分数
-            segmentation = np.array(segmentation)
-            min_scores = np.min(segmentation)
-            max_scores = np.max(segmentation)
-            norm_segmentation = (segmentation - min_scores) / (max_scores - min_scores + 1e-10)
-
-        # 保存预测图像
-        defect = np.array(image)
-        # print(defect.shape)
-        # targets = np.array(masks_gt)
-        # for i in range(len(defects)):
-        defect = utils.torch_format_2_numpy_img(defect)
-        # target = utils.torch_format_2_numpy_img(targets[i])
-
-        mask = cv2.cvtColor(cv2.resize(norm_segmentation, (defect.shape[1], defect.shape[0])),
-                            cv2.COLOR_GRAY2BGR)
-        mask = (mask * 255).astype('uint8')
-        mask = cv2.applyColorMap(mask, cv2.COLORMAP_JET)
-
-        # img_up = np.hstack([defect, target, mask])
-        img_up = np.hstack([defect, mask])
-
-        img_up = cv2.resize(img_up, (640 * 2, 640))
-        full_path = os.path.join('./results/', path, name)
-        utils.del_remake_dir(full_path, del_flag=False)
-
-        img_name = os.path.basename(img_path[0])
-        cv2.imwrite(os.path.join(full_path, img_name), img_up)
-        # cv2.imwrite(os.path.join(full_path, f'mask_{img_name}'), mask)
-        # return  # 不返回任何指标
-
-    def predict(self, test_dataloader, name):
+    def predict(self, test_dataloader):
         """This function provides anomaly scores/maps for full dataloaders."""
         self.forward_modules.eval()
 
-        # img_paths = []
-        # images = []
-        # scores = []
-        # masks = []
-        # labels_gt = []
-        # masks_gt = []
+        img_paths = []
+        images = []
+        scores = []
+        masks = []
+        labels_gt = []
+        masks_gt = []
         t1 = time.time()
         # with tqdm.tqdm(test_dataloader, desc="Inferring...", leave=True, unit='batch') as data_iterator:
 
         for data in test_dataloader:
-            # if isinstance(data, dict):
-                # labels_gt.extend(data["is_anomaly"].numpy().tolist())
-                # if data.get("mask_gt", None) is not None:
-                #     masks_gt.extend(data["mask_gt"].numpy().tolist())
-                # image = data["image"]
-                # images.extend(image.numpy().tolist())
-                # img_paths.extend(data["image_path"])
-            # self._evaluate(image, _scores, _masks)
-            # for score, mask in zip(_scores, _masks):
-            #     scores.append(score)
-            #     masks.append(mask)
-            image = data["image"]
+            if isinstance(data, dict):
+                labels_gt.extend(data["is_anomaly"].numpy().tolist())
+                if data.get("mask_gt", None) is not None:
+                    masks_gt.extend(data["mask_gt"].numpy().tolist())
+                image = data["image"]
+                images.extend(image.numpy().tolist())
+                img_paths.extend(data["image_path"])
             _scores, _masks = self._predict(image)
-            self._evaluate(image, _masks[0], data["mask_gt"].numpy().tolist(), name, data["image_path"])
-            
-
+            for score, mask in zip(_scores, _masks):
+                scores.append(score)
+                masks.append(mask)
 
         t2 = time.time()
         total_time = t2 - t1 
         print(f"Total inference time: {total_time:.2f} seconds")
-        # return images, scores, masks, labels_gt, masks_gt, img_paths
+        return images, scores, masks, labels_gt, masks_gt, img_paths
 
     def _predict(self, img):
         """Infer score and mask for a batch of images."""

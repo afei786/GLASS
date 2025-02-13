@@ -1,12 +1,13 @@
-from main_noneed_gt import main_entry
+from main_noneed_gt_1 import main_entry
+import trace
 
-if __name__ == "__main__":
+def pred():
     # 模拟命令行参数
     args = [
         "--gpu", "0",
         "--seed", "0",
-        "--test", "train",
-        "--ckpt_path", "results/models/backbone_0/mvtec_cxjzq1_new/ckpt.pth",
+        "--test", "test",
+        "--ckpt_path", "results/models/backbone_0/mvtec_dxllt1_new/ckpt.pth",
         "net",
         "-b", "wideresnet50",
         "-le", "layer2",
@@ -31,12 +32,30 @@ if __name__ == "__main__":
         "--std", "0.1",
         "--fg", "0",
         "--rand_aug", "1",
-        "--batch_size", "8",
-        "--resize", "640",
-        "--imagesize", "640",
+        "--batch_size", "1",
+        "--resize", "256",
+        "--imagesize", "256",
         "-d", "dxllt1_new",
-        "mvtec", "/home/fei/code/jm_wh3/images_seg", "/home/fei/code/glass/dtd/images"
+        "mvtec", "/home/fei/code/jm_wh3/images_seg_dxllt_new", "/home/fei/code/glass/dtd/images"
     ]
 
     # 调用 main_noneed_gt 的主函数
     main_entry(args)
+
+def pred1():
+    # 模拟命令行参数
+    args = [
+        '--test','test',
+        "--ckpt_path", "results/models/backbone_0/mvtec_dxllt1_new/ckpt.pth",
+        "net",
+        "dataset",
+        "-d", "dxllt1_new2",
+        "/home/fei/code/jm_wh3/images_seg_dxllt_new"
+    ]
+
+    # 调用 main_noneed_gt 的主函数
+    main_entry(args)
+
+
+if __name__ == "__main__":
+    pred1()
