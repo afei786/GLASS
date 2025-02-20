@@ -1,13 +1,13 @@
-datapath=/home/fei/data/new_images_seg
+datapath=/home/fei/data/wuhu/ps_images_seg
 augpath=/home/fei/code/glass/dtd/images
-classes=('cxjzq12')
+classes=("dxllt1" 'dgnzj' 'jdx' 'qylgs' 'cxjzq1' 'cxjzq2' 'xjslh1' 'fql' 'sbqb' 'qylgx' 'dxllt4' 'fqg2' 'fqg1' 'dxllt3' 'hxjzq' 'fzzxg' 'zdp' 'hxlg' 'xjslh2' 'cxjzq3' 'rdx' 'dxllt2')
 flags=($(for class in "${classes[@]}"; do echo '-d '"${class}"; done))
 
 cd ..
 python main_noneed_gt.py \
     --gpu 0 \
     --seed 0 \
-    --test ckpt \
+    --test train \
   net \
     -b wideresnet50 \
     -le layer2 \

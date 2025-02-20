@@ -24,6 +24,7 @@ LOGGER.info("Command line arguments: {}".format(" ".join(sys.argv)))
 @click.option("--run_name", type=str, default="test")
 @click.option("--test", type=str, default="test")  # 测试或训练
 @click.option("--ckpt_path", type=str)  # 如果测试，则指定ckpt_path
+@click.option("--save_path", type=str)  # 结果保存路径
 def main(**kwargs):
     pass
 
@@ -123,7 +124,7 @@ def net(
 
 @main.command("dataset")
 @click.argument("data_path", type=click.Path(exists=True, file_okay=False))  # 数据集根目录
-@click.argument("name", type=str, default="mvtec")  # 数据集类型名称
+@click.argument("name", type=str, default="mvtec")  # 数据集类型名
 @click.argument("aug_path",  default="/home/fei/code/glass/dtd/images", type=click.Path(exists=True, file_okay=False))  # 增强数据集路径
 @click.option("--subdatasets", "-d", multiple=True, type=str, required=True)  # 数据集子集名 / 类别名
 @click.option("--batch_size", default=8, type=int, show_default=True)  # 训练/测试时 batch_size
@@ -170,13 +171,11 @@ def dataset(
         rand_aug,
         augment,
 ):
-    print('name',name)
-    print('data_path',data_path)
     _DATASETS = {"mvtec": ["train_noneed_gt.mvtec", "MVTecDataset"], "visa": ["train_noneed_gt.visa", "VisADataset"],
                  "mpdd": ["train_noneed_gt.mvtec", "MVTecDataset"], "wfdd": ["train_noneed_gt.mvtec", "MVTecDataset"], }
     dataset_info = _DATASETS[name]
     dataset_library = __import__(dataset_info[0], fromlist=[dataset_info[1]])
-
+    print('augment',augment)
     def get_dataloaders(seed, test, get_name=name):
         dataloaders = []
         for subdataset in subdatasets:
@@ -274,16 +273,17 @@ def run(
         log_project,
         run_name,
         test,
-        ckpt_path
+        ckpt_path,
+        save_path,
 ):
     methods = {key: item for (key, item) in methods}
-
+    print('results_path', results_path)
     run_save_path = utils.create_storage_folder(
         results_path, log_project, log_group, run_name, mode="overwrite"
     )
 
     list_of_dataloaders = methods["get_dataloaders"](seed, test)
-
+    print('list_of_dataloaders', list_of_dataloaders)
     device = utils.set_torch_device(gpu)
 
     data = {'Class': [], 'Distribution': [], 'Foreground': []}
@@ -306,29 +306,37 @@ def run(
 
         models_dir = os.path.join(run_save_path, "models")
         os.makedirs(models_dir, exist_ok=True)
-        
-        for i, GLASS in enumerate(glass_list):
+        if test == 'test':
             flag = None
               # 设置模型目录
-            GLASS.set_model_dir(os.path.join(models_dir, f"backbone_{i}"), dataset_name)
-            
-            # 训练过程
-            if test == 'train':
-                for i, GLASS in enumerate(glass_list):
-                    if GLASS.backbone.seed is not None:
-                        utils.fix_seeds(GLASS.backbone.seed, device)
+            GLASS = glass_list[0]
+            # GLASS.set_model_dir(os.path.join(models_dir, f"backbone_0"), dataset_name)
+            # 测试过程（不接收指标返回值）
+            if not isinstance(flag, int):
+                GLASS.tester(ckpt_path, dataloaders["testing"], save_path)  # 不需要返回指标
 
-                    GLASS.set_model_dir(os.path.join(models_dir, f"backbone_{i}"), dataset_name)
-                    flag = GLASS.trainer(dataloaders["training"], None, dataset_name)
+        # for i, GLASS in enumerate(glass_list):
+        #     flag = None
+        #       # 设置模型目录
+        #     GLASS.set_model_dir(os.path.join(models_dir, f"backbone_{i}"), dataset_name)
+        #     print(os.path.join(models_dir, f"backbone_{i}"), dataset_name)
+        #     # 训练过程
+        #     if test == 'train':
+        #         for i, GLASS in enumerate(glass_list):
+        #             if GLASS.backbone.seed is not None:
+        #                 utils.fix_seeds(GLASS.backbone.seed, device)
+
+        #             GLASS.set_model_dir(os.path.join(models_dir, f"backbone_{i}"), dataset_name)
+        #             flag = GLASS.trainer(dataloaders["training"], None, dataset_name)
                     
-                    # 如果 `GLASS.trainer` 返回 int，则记录分布信息
-                    if isinstance(flag, int):
-                        row_dist = {'Class': dataloaders["training"].name, 'Distribution': flag, 'Foreground': flag}
-                        df = pd.concat([df, pd.DataFrame(row_dist, index=[0])])
-            elif test == 'test':
-                # 测试过程（不接收指标返回值）
-                if not isinstance(flag, int):
-                    GLASS.tester(ckpt_path, dataloaders["testing"], dataset_name)  # 不需要返回指标
+        #             # 如果 `GLASS.trainer` 返回 int，则记录分布信息
+        #             if isinstance(flag, int):
+        #                 row_dist = {'Class': dataloaders["training"].name, 'Distribution': flag, 'Foreground': flag}
+        #                 df = pd.concat([df, pd.DataFrame(row_dist, index=[0])])
+        #     elif test == 'test':
+        #         # 测试过程（不接收指标返回值）
+        #         if not isinstance(flag, int):
+        #             GLASS.tester(ckpt_path, dataloaders["testing"], dataset_name)  # 不需要返回指标
 
 
     # 保存分布信息到Excel

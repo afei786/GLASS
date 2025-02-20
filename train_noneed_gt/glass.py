@@ -341,17 +341,16 @@ class GLASS(torch.nn.Module):
             images, scores, segmentations, labels_gt, masks_gt, img_paths = self.predict(test_data)
 
             # 只保存结果图像，不返回指标
-            self._evaluate(images, scores, segmentations, labels_gt, masks_gt, name, img_paths, path='eval')
+            self._evaluate(images, scores, segmentations, labels_gt, masks_gt, name, img_paths, path='predict')
         else:
             LOGGER.info("No ckpt file found!")
 
         # 不返回任何指标
         return
 
-    def _evaluate(self, images, scores, segmentations, labels_gt, masks_gt, name, img_paths, path='eval'):
+    def _evaluate(self, images, scores, segmentations, labels_gt, masks_gt, name, img_paths, path='predict'):
         # 规范化分数（去掉 image_auroc 等计算）
         scores = np.squeeze(np.array(scores))
-        # print('scores', scores)
         # img_min_scores = min(scores)
         # img_max_scores = max(scores)
         # norm_scores = (scores - img_min_scores) / (img_max_scores - img_min_scores + 1e-10)
@@ -365,7 +364,7 @@ class GLASS(torch.nn.Module):
 
         # 保存预测图像
         defects = np.array(images)
-        targets = np.array(masks_gt)
+        # targets = np.array(masks_gt)
         for i in range(len(defects)):
             defect = utils.torch_format_2_numpy_img(defects[i])
             # target = utils.torch_format_2_numpy_img(targets[i])
@@ -380,13 +379,12 @@ class GLASS(torch.nn.Module):
 
             img_up = cv2.resize(img_up, (640 * 2, 640))
             full_path = os.path.join('./results/', path, name)
-            # print(full_path)
             utils.del_remake_dir(full_path, del_flag=False)
 
             img_name = os.path.basename(img_paths[i])
 
-            cv2.imwrite(os.path.join(full_path, img_name), img_up)
-            # cv2.imwrite(os.path.join(full_path, f'mask_{img_name}'), mask)
+            # cv2.imwrite(os.path.join(full_path, img_name), img_up)
+            cv2.imwrite(os.path.join(full_path, f'mask_{img_name}'), mask)
         return  # 不返回任何指标
 
     def predict(self, test_dataloader):
